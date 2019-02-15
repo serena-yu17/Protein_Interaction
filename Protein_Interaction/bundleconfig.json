@@ -1,0 +1,72 @@
+[
+  {
+    "outputFileName": "wwwroot/css/site.min.css",
+    "inputFiles": [
+      "wwwroot/css/site.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/site.min.js",
+    "inputFiles": [
+      "wwwroot/js/site.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    }
+  },
+  {
+    "outputFileName": "wwwroot/js/blob.min.js",
+    "inputFiles": [
+      "wwwroot/js/blob.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/FileSaver.min.js",
+    "inputFiles": [
+      "wwwroot/js/FileSaver.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/thousandSplitter.min.js",
+    "inputFiles": [
+      "wwwroot/js/thousandSplitter.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/css/index.min.css",
+    "inputFiles": [
+      "wwwroot/css/index.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/css/searchStyle.min.css",
+    "inputFiles": [
+      "wwwroot/css/searchStyle.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/css/About.min.css",
+    "inputFiles": [
+      "wwwroot/css/About.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/search.min.js",
+    "inputFiles": [
+      "wwwroot/js/search.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/Single/index.min.js",
+    "inputFiles": [
+      "wwwroot/js/Single/index.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/Multi/index.min.js",
+    "inputFiles": [
+      "wwwroot/js/Multi/index.js"
+    ]
+  }
+]

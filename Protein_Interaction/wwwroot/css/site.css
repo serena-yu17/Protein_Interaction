@@ -1,0 +1,75 @@
+﻿.title {
+    max-width: 250px;
+    margin-top: 25px;
+}
+
+.spin {
+    max-width: 150px;
+}
+
+img.iconImg {
+    max-width: 400px;
+}
+
+@media screen and (-ms-high-contrast: none) {
+    /* IE10+ CSS styles go here */
+    .padded {
+        padding-right: 80px;
+    }
+}
+
+.input-text{
+    width: 180px;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Carousel */
+.carousel-caption p {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+/* Make .svg files in the carousel display properly in older browsers */
+.carousel-inner .item img[src$=".svg"] {
+    width: 100%;
+}
+
+/* QR code generator */
+#qrCode {
+    margin: 15px;
+}
+
+/* Hide/rearrange for smaller screens */
+@media screen and (max-width: 767px) {
+    /* Hide captions */
+    .carousel-caption {
+        display: none;
+    }
+}  
+
+h1 {
+    font-size: x-large;
+    color:brown;
+}
+
+h2 {
+    font-size: x-large;
+    color:royalblue;
+}
+
+h3{
+    font-size:large;
+}
+
+.hidden{
+    display:none !important;
+    visibility:hidden !important;
+}
+
+

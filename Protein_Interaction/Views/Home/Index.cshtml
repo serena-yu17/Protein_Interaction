@@ -1,0 +1,31 @@
+﻿
+@{
+    ViewData["Title"] = "Home";
+}
+<link rel="stylesheet" href="~/css/index.min.css" type="text/css" />
+<div class="horizontal-section"
+     style="background: #e7e2d3 url(/images/index_gene.jpg) 50% no-repeat;margin-top:-20px;">
+    <div class="row">
+        <div class="sec">
+            <a href="@Url.Action("Single", "Search")">
+                <img class="iconImg" alt="Single gene pathway analysis" src="~/images/index_s.svg" />
+                <h2>Search for up- or down- stream pathways for the gene you are interested in.</h2>
+            </a>
+            <br />
+        </div>
+    </div>
+</div>
+<div class="horizontal-section"
+     style="background: #e4f1ea url(/images/index_pathway.jpg) 50% no-repeat;
+        padding-top: 50px">
+    <div class="row">
+        <div class="sec">
+            <a href="@Url.Action("Multi", "Search")">
+                <img class="iconImg" alt="Pathway enrichment analysis" src="~/images/index_m.svg" />
+                <h2>Interconnect your genes of interest in the vast human genome network.</h2>
+            </a>
+            <br />
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,89 @@
+﻿@{
+    ViewData["Title"] = "About";
+}
+<link rel="stylesheet" href="~/css/About.min.css" />
+<div class="container body-content">
+    <h1>Express human protein pathway visualization</h1>
+    <div class="card">
+        <h2>Database</h2>
+        <table class="table table-striped">
+            <tbody>
+                <tr>
+                    <td>Total genes recorded:</td>
+                    <td><span id="gene-count">...</span></td>
+                </tr>
+                <tr>
+                    <td>Gene synonyms supported:</td>
+                    <td><span id="syn-count">...</span></td>
+                </tr>
+                <tr>
+                    <td>Total papers recorded:</td>
+                    <td><span id="record-count">...</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="card">
+        <h2>Introduction</h2>
+        <p>This is a light-weight web app for common biomedical professionals to quickly look up genome pathways related to their genes of interest.</p>
+        <br />
+        <p>Searching among signalling pathways is often time-consuming, since protein reactome maps are often highly complex and it is difficult to find different pathways that are related to the same protein.</p>
+        <img class="content-img" src="~/images/pathways.png" alt="traditional molecular pathwa presentation" />
+        <p>The above image shows the conventional way of showing molecular pathways. The pathway being looked for is mingled by a lot of noise.</p>
+        <p><br /><br />Instead of showing long lists of protein interactions, this web app focuses on custom genes requested by you. It generates a tree of interacting genes customly plotted for your need</p>
+        <p>Genome pathway lookups will be generated for your genes specifically.</p>
+        <p>It involves 2 modules: </p><br />
+        <h3>Module 1. Single gene pathway analysis:  </h3>
+        <p>Given a gene, find the up-stream and/or downstream molecular pathways. You may choose the length of pathways to search for. </p>
+        <img class="content-img" src="~/images/demo1.png" alt="demo for module 1" />
+        <p>
+            I think it is self-explanatory from the first sight on this map. If I input Ago2, I will get its upstream and downstream genes.
+            I may also choose how many genes to search for and how many levels down into the molecular pathway. The search algorithm is based on academic reports: the gene interactions that are reported most will come first.
+        </p>
+        <p>There is a button below that can generate a list of references from PubMed for all the genes listed.</p>
+        <img class="content-img" src="~/images/demo3.png" alt="demo for generate reference button" />
+        <img class="content-img" src="~/images/demo4.png" alt="demo for the list of references of module 1" />
+        <br /><br />
+        <h3>Module 2: Pathway enrichment analysis:</h3>
+        <p>Given a list of genes, find the pathways that connect them. If a gene cannot be connected, it will not be shown in the figure. </p>
+        <img class="content-img" src="~/images/demo2.png" alt="demo for module 2" />
+        <p>For example, if I ran some PCR in my cell model and found TP53, AKT1, and PIK3R3 were the most significant genes, I would want to know what other genes could be involved. In a quick search on this website I would find how these genes are related in the human genome network, and figure out ERBB3, RB1, PTK2, and PIK3CA may be worth for further investigation.</p>
+        <p>Same as Single gene pathway analysis, there will also be a button appearing below the graph, which will generate a list of references for you:</p>
+        <img class="content-img" src="~/images/demo5.png" alt="demo for the list of references of module 2" />
+        <p>You must have noticed that some genes are reported repeatedly, so they can generate a long list.</p>
+        <p>Enjoy!</p>
+    </div>
+    <div class="card">
+        <h2>Source of Data</h2>
+        <p>
+            This web app visualizes the human protein interaction data openly available from
+            <a href="https://thebiogrid.org/" target="_blank">https://thebiogrid.org/</a>.
+        </p>
+        <p>
+            Gene symbols were retrieved from
+            <a href="https://www.ncbi.nlm.nih.gov/gene/" target="_blank">NCBI / GenBank</a>
+        </p>
+        <p>
+            The pathway enrichment analysis module is openly available at <a href=https://github.com/serena-yu17/gene-enrichment target="_blank">GitHub: Gene-Enrichment</a>
+        </p>
+        <p>
+            The data processing module is openly available at
+            <a href="https://github.com/serena-yu17/Populate-website" target="_blank"> GitHub: Populate-website </a>
+        </p>
+    </div>
+</div>
+<script src="~/js/thousandSplitter.min.js"></script>
+<script>
+    $.ajax({
+        type: 'GET',
+        url: '@Url.Action("GetCount")',
+        success: function (rawstr) {
+            if (rawstr != '') {
+                var data = JSON.parse(rawstr);
+                document.getElementById('gene-count').innerHTML = spaceSplitThousand(data['queryID']);
+                document.getElementById('syn-count').innerHTML = spaceSplitThousand(data['querySyn']);
+                document.getElementById('record-count').innerHTML = spaceSplitThousand(data['queryRef']);
+            }
+        }
+    });
+</script>

@@ -1,0 +1,82 @@
+﻿@{
+    ViewData["Title"] = "Single gene search";
+}
+<style>
+    body {
+        background-color: #fffff3;
+    }
+</style>
+<link rel="stylesheet" href="~/css/searchStyle.min.css" />
+<div class="container body-content">
+    <img class="mx-auto d-block title row" src="~/images/title.svg" alt="website logo" />
+    <img class="mx-auto d-block title row" src="~/images/logo_s.svg" alt="Single gene pathway analysis" />
+    <br />
+    <form>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text input-text">Gene ID</span>
+            </div>
+            <input class="form-control" id="geneid" name="geneid" type="text" value="Ago2" required />
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text input-text">Upstream Length</span>
+            </div>
+            <input class="form-control" id="uplen" name="uplen" type="text" value=1 required />
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text input-text">Downstream Length</span>
+            </div>
+            <input class="form-control" id="downlen" name="downlen" type="text" value=2 required />
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text input-text">Genes per level</span>
+            </div>
+            <input class="form-control" id="perlvl" name="perlvl" type="text" value=3 required />
+        </div>
+        <button class="btn btn-outline-primary" id="btnsubmit" type="submit">Submit</button>
+    </form>
+    <div id="spinner" class="hidden">
+        <br />
+        <img class="mx-auto d-block spin" src="~/images/loading.gif" alt="processing..." /><br />
+    </div>
+
+    <div style="margin-top:20px;"><p id="prompt"></p></div>
+    <div id="div-scale" class="hidden">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text input-text">Image size:&nbsp;&nbsp;<span id="scale">100</span>%</span>
+            </div>
+            <input class="form-control" id="inputscale" name="scale" type="range" value=100 min="0" max="400" />
+        </div>
+        <button class="btn btn-outline-info" id="btnsave" type="button">Save picture</button>
+    </div>
+    <div id="output"></div>
+    <br /><br />
+    <div id="ref" class="hidden">
+        <label for="btnref">Generate a complete list of gene interactions that are shown in the figure, coupled with PubMed references:</label><br />
+        <button class="btn btn-outline-info" id="btnref" type="button">Generate</button>
+    </div>
+    <div id="spinner2" class="hidden">
+        <br />
+        <img class="mx-auto d-block spin" src="~/images/loading.gif" alt="processing..." /><br />
+    </div>
+    <div id="outtext"></div>
+    <div>
+        <canvas id="temp" class="hidden"></canvas>
+    </div>
+    <br /><br />
+</div>
+<script type="text/javascript">
+    var width = 0, height = 0;
+    var instanceID = @ViewBag.taskID;
+    var searchUrl = '@Url.Action("SearchSingle")';
+    var refURl = '@Url.Action("GetReference")';
+    var cancelUrl = '@Url.Action("CancelTask")';    
+</script>
+<script type="text/javascript" src="~/js/Single/index.min.js"></script>
+<script type="text/javascript" src="~/js/search.min.js"></script>
+
+

@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - iProtein</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="~/css/site.min.css" type="text/css" />
+</head>
+<body>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>     
+    <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-static-top" style="margin-bottom: 20px;">
+        <a class="navbar-brand" href="@Url.Action("Index", "Home")">
+            <img src="~/images/title.svg" alt="Index" class="padded" style="height:20px;" />
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse"
+                data-target="#navBarList" aria-controls="navBarList"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navBarList">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active"><a class="nav-link" asp-area="" asp-controller="Search" asp-action="Single">Single-Gene Pathway Lookup</a></li>
+                <li class="nav-item active"><a class="nav-link" asp-area="" asp-controller="Search" asp-action="Multi">Pathway Enrichment Analysis</a></li>
+                <li class="nav-item active"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="About">About</a></li>
+                <li class="nav-item active"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+    @RenderBody()
+    <div class="container">
+        <hr />
+        <footer>
+            <p>&copy; 2017 - Serena Yu</p>
+        </footer>
+    </div>
+</body>
+</html>
