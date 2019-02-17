@@ -45,8 +45,21 @@ namespace Protein_Interaction.Operations
 #if DEBUG
         const string dbServer = DBHandler.Servers.test;
 #else
-        const string dbServer = dbServer;
+        const string dbServer = DBHandler.Servers.azureProtein;
 #endif
+
+        private static readonly char[] delim = new char[]
+        {
+            ',', ' ', ';'
+        };
+
+        private static int taskCount = 0;
+
+        private static Task dbTsk = null;
+        private static object dbLock = new object();
+        private static HashAlgorithm md5 = MD5.Create();
+
+        private static ConcurrentDictionary<int, CancellationTokenSource> cancellation = new ConcurrentDictionary<int, CancellationTokenSource>();
 
         private static Dictionary<GenePair, int> GeneRelation = null;
         private static Dictionary<string, int> geneid = null;
@@ -56,14 +69,6 @@ namespace Protein_Interaction.Operations
 
         private IMemoryCache _cache;
         private ILogger<GeneGraphOperations> logger;
-
-        private static int taskCount = 0;
-
-        private static Task dbTsk = null;
-        private static object dbLock = new object();
-        private static HashAlgorithm md5 = MD5.Create();
-
-        private static ConcurrentDictionary<int, CancellationTokenSource> cancellation = new ConcurrentDictionary<int, CancellationTokenSource>();
 
         public GeneGraphOperations(IMemoryCache cache, ILoggerFactory factory)
         {
@@ -177,6 +182,16 @@ namespace Protein_Interaction.Operations
             if (references != null && references.Length != 0)
                 _cache.Set(refKey, references);
             return references;
+        }
+
+        public MultiQueryModel collectQueryGenes(string query, int instanceID)
+        {
+            var sections = query.ToUpper().Split(delim, StringSplitOptions.RemoveEmptyEntries);
+            List<int> queryGeneID = new List<int>();
+            foreach (var sec in sections)
+                if (geneid.ContainsKey(sec))
+                    queryGeneID.Add(geneid[sec]);
+            return new MultiQueryModel(queryGeneID.ToArray(), instanceID);
         }
 
         private async Task<ReferenceModel[]> _getRef(GenePair[] interactions)

@@ -44,7 +44,10 @@ namespace Protein_Interaction.Controllers
             {
                 var res = graphOperations.searchSingle(model);
                 if (res.failure != null)
+                {
+                    Response.StatusCode = 500;
                     return Json(res.failure);
+                }
                 return Json(res.graph);
             }
             catch (Exception ex)
@@ -56,13 +59,16 @@ namespace Protein_Interaction.Controllers
 
         [HttpGet]
         public IActionResult SearchMulti(string query, int instanceID)
-        {
-            var model = new MultiQueryModel(query, instanceID);
+        {            
             try
             {
+                var model = graphOperations.collectQueryGenes(query, instanceID);
                 var res = graphOperations.searchMulti(model);
                 if (res.failure != null)
+                {
+                    Response.StatusCode = 500;
                     return Json(res.failure);
+                }
                 return Json(res.graph);
             }
             catch (Exception ex)

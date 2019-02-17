@@ -35,21 +35,12 @@ namespace Protein_Interaction.Models
 
         public int instanceID { get; set; }
 
-        private static readonly char[] delim = new char[]
-        {
-            ',', ' ', ';'
-        };
+        
 
-        public MultiQueryModel(string query, int instanceID)
+        public MultiQueryModel(int[] queries, int instanceID)
         {
+            this.queries = queries;
             this.instanceID = instanceID;
-
-            var sections = query.Split(delim, StringSplitOptions.RemoveEmptyEntries);
-            List<int> queryGeneID = new List<int>();
-            foreach (var sec in sections)
-                if (int.TryParse(sec, out var intVal))
-                    queryGeneID.Add(intVal);
-            queries = queryGeneID.ToArray();
         }
     }
 

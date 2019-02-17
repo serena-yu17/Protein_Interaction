@@ -17,7 +17,7 @@ namespace Protein_Interaction.Operations
 #if DEBUG
         const string dbServer = DBHandler.Servers.test;
 #else
-        const string dbServer = dbServer;
+        const string dbServer = DBHandler.Servers.azureProtein;
 #endif
 
         public HomeOperations(ILoggerFactory factory)
