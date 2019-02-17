@@ -5,6 +5,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Protein_Interaction.Models
 {
+    public class CountModel
+    {
+        public string id;
+        public string syn;
+        public string nref;
+    }
+
     [ProtoContract]
     public class SingleQueryModel
     {

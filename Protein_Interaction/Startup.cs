@@ -61,6 +61,7 @@ namespace Protein_Interaction
             });
 
             new GeneGraphOperations(null, loggerFactory).loadDB();
+            new HomeOperations(loggerFactory).loadCount();
         }
     }
 }

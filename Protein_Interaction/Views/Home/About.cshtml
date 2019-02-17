@@ -9,16 +9,16 @@
         <table class="table table-striped">
             <tbody>
                 <tr>
-                    <td>Total genes recorded:</td>
-                    <td><span id="gene-count">...</span></td>
+                    <td>Genes:</td>
+                    <td><span id="gene-count">Loading...</span></td>
                 </tr>
                 <tr>
-                    <td>Gene synonyms supported:</td>
-                    <td><span id="syn-count">...</span></td>
+                    <td>Gene synonyms:</td>
+                    <td><span id="syn-count">Loading...</span></td>
                 </tr>
                 <tr>
-                    <td>Total papers recorded:</td>
-                    <td><span id="record-count">...</span></td>
+                    <td>References:</td>
+                    <td><span id="record-count">Loading...</span></td>
                 </tr>
             </tbody>
         </table>
@@ -72,18 +72,7 @@
         </p>
     </div>
 </div>
-<script src="~/js/thousandSplitter.min.js"></script>
 <script>
-    $.ajax({
-        type: 'GET',
-        url: '@Url.Action("GetCount")',
-        success: function (rawstr) {
-            if (rawstr != '') {
-                var data = JSON.parse(rawstr);
-                document.getElementById('gene-count').innerHTML = spaceSplitThousand(data['queryID']);
-                document.getElementById('syn-count').innerHTML = spaceSplitThousand(data['querySyn']);
-                document.getElementById('record-count').innerHTML = spaceSplitThousand(data['queryRef']);
-            }
-        }
-    });
+    const countUrl = '@Url.Action("Count")';
 </script>
+<script type="text/javascript" src="~/js/about.js"></script>

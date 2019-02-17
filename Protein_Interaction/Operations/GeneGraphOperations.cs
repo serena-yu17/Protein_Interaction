@@ -42,6 +42,12 @@ namespace Protein_Interaction.Operations
         [DllImport("gene.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern void terminnateProc(int tid);
 
+#if DEBUG
+        const string dbServer = DBHandler.Servers.test;
+#else
+        const string dbServer = dbServer;
+#endif
+
         private static Dictionary<GenePair, int> GeneRelation = null;
         private static Dictionary<string, int> geneid = null;
         private static Dictionary<int, string> idgene = null;
@@ -152,7 +158,7 @@ namespace Protein_Interaction.Operations
         {
             GenePair[] interactions = null;
 
-            if (!_cache.TryGetValue(searchRef, out SearchResultModel resultData) || 
+            if (!_cache.TryGetValue(searchRef, out SearchResultModel resultData) ||
                 resultData == null || resultData.referencePairs == null)
                 return null;
 
@@ -175,7 +181,7 @@ namespace Protein_Interaction.Operations
 
         private async Task<ReferenceModel[]> _getRef(GenePair[] interactions)
         {
-            #region query
+#region query
             const string query = @"
             if OBJECT_ID('tempdb..#tempGenes') is not null
 	            drop table #tempGenes;
@@ -191,7 +197,7 @@ namespace Protein_Interaction.Operations
             select r.Gene1, r.Gene2, r.RefID, r.Author
             from Ref r
 	            join #tempGenes t on r.Gene1 = t.gene1 and r.Gene2 = t.gene2;";
-            #endregion
+#endregion
 
             //synthesize the query
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -219,7 +225,7 @@ namespace Protein_Interaction.Operations
             Dictionary<GenePair, List<(int, string)>> queryItems = new Dictionary<GenePair, List<(int, string)>>();
             List<List<object>> rawData = new List<List<object>>();
 
-            await DBHandler.getDataListAsync(null, rawData, null, completeQuery, DBHandler.Servers.azureProtein).ConfigureAwait(false);
+            await DBHandler.getDataListAsync(null, rawData, null, completeQuery, dbServer).ConfigureAwait(false);
 
             if (rawData.Count != 0)
                 foreach (var row in rawData)
@@ -558,19 +564,25 @@ namespace Protein_Interaction.Operations
 
         private async Task loadSymbols()
         {
-            const string query = @"select ID, Symbol from GeneID;";
-            List<List<object>> data = new List<List<object>>();
-            await DBHandler.getDataListAsync(null, data, null, query, DBHandler.Servers.azureProtein).ConfigureAwait(false);
+            const string symbolQuery = @"select ID, Symbol from GeneID;";
+            const string synonQuery = @"select Symbol, ID from Synon;";
+            List<List<object>> symbols = new List<List<object>>();
+            List<List<object>> synons = new List<List<object>>();
+            var tskSymbol = DBHandler.getDataListAsync(null, symbols, null, symbolQuery, dbServer);
+            var tskSynon = DBHandler.getDataListAsync(null, synons, null, synonQuery, dbServer);
+            await Task.WhenAll(tskSymbol, tskSynon).ConfigureAwait(false);
+
             Dictionary<int, string> newIDGene = new Dictionary<int, string>();
             Dictionary<string, int> newGeneID = new Dictionary<string, int>();
-            if (data.Count != 0)
-                foreach (var row in data)
-                {
-                    int id = (int)row[0];
-                    string symbol = row[1] as string;
-                    newIDGene[id] = symbol;
-                    newGeneID[symbol] = id;
-                }
+            foreach (var row in symbols)
+            {
+                int id = (int)row[0];
+                string symbol = row[1] as string;
+                newIDGene[id] = symbol;
+                newGeneID[symbol] = id;
+            }
+            foreach (var row in synons)
+                newGeneID[row[0] as string] = (int)row[1];
             Interlocked.Exchange(ref idgene, newIDGene);
             Interlocked.Exchange(ref geneid, newGeneID);
         }
@@ -584,7 +596,7 @@ namespace Protein_Interaction.Operations
             var newCacheDown = new Dictionary<int, List<int>>();
 
             List<List<object>> data = new List<List<object>>();
-            await DBHandler.getDataListAsync(null, data, null, query, DBHandler.Servers.azureProtein).ConfigureAwait(false);
+            await DBHandler.getDataListAsync(null, data, null, query, dbServer).ConfigureAwait(false);
 
             if (data.Count != 0)
                 foreach (var item in data)
@@ -617,7 +629,7 @@ namespace Protein_Interaction.Operations
                     { "@query", logText },
                     { "@instanceID", instanceID }
                 };
-                await DBHandler.ExecuteNonQueryAsync(query, DBHandler.Servers.azureProtein, param).ConfigureAwait(false);
+                await DBHandler.ExecuteNonQueryAsync(query, dbServer, param).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
