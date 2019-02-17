@@ -66,11 +66,6 @@ namespace Protein_Interaction.Operations
             logger = factory.CreateLogger<GeneGraph>();
         }
 
-        private bool isDatasetValid()
-        {
-            return GeneRelation != null && geneid != null && idgene != null && CacheUp != null && CacheDown != null && GeneRelation.Count > 200000;
-        }
-
         public void loadDB()
         {
             if ((dbTsk == null || dbTsk.IsCompleted) && isDatasetValid())
@@ -88,13 +83,12 @@ namespace Protein_Interaction.Operations
         public SearchResultModel searchSingle(SingleQueryModel model)
         {
             model.query = model.query.ToUpper().Trim();
-            byte[] serialized = null;
+            string refKey = null;
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, model);
-                serialized = ms.ToArray();
+                refKey = getHashString(ms);
             }
-            var refKey = getHashString(serialized);
             if (_cache.TryGetValue(refKey, out SearchResultModel val) && val != null && val.graph != null)
             {
                 return val;
@@ -112,7 +106,112 @@ namespace Protein_Interaction.Operations
             }
             clearCancellationTokenSource(model.instanceID);
             return data;
-        }                
+        }
+
+        public async Task<ReferenceModel[]> obtainRef(GenePair[] interactions)
+        {
+            string refKey = null;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, interactions);
+                refKey = getHashString(ms);
+            }
+            if (_cache.TryGetValue(refKey, out ReferenceModel[] data) && data != null && data.Length != 0)
+                return data;
+
+            var references = await _obtainRef(interactions).ConfigureAwait(false);
+            if(references != null && references.Length != 0)
+                _cache.Set(refKey, references);
+            return references;
+        }
+
+        private async Task<ReferenceModel[]> _obtainRef(GenePair[] interactions)
+        {
+            #region query
+            const string query = @"
+            if OBJECT_ID('tempdb..#tempGenes') is not null
+	            drop table #tempGenes;
+
+            create table #tempGenes(
+	            gene1 int,
+	            gene2 int
+            );
+
+            insert into #tempGenes(gene1, gene2)
+            values @insertVal;
+
+            select r.Gene1, r.Gene2, r.RefID, r.Author
+            from Ref r
+	            join #tempGenes t on r.Gene1 = t.gene1 and r.Gene2 = t.gene2;";
+            #endregion
+
+            //synthesize the query
+            Dictionary<string, object> param = new Dictionary<string, object>();
+            StringBuilder insertVal = new StringBuilder();
+            for (int i = 0; i < interactions.Length; i++)
+            {
+                if (i != 0)
+                    insertVal.Append(",");
+                insertVal.Append("(");
+
+                string firstParam = "@f" + (i * 2).ToString();
+                param[firstParam] = interactions[i].Gene1;
+                insertVal.Append(firstParam);
+
+                insertVal.Append(",");
+
+                string secondParam = "@s" + (i * 2 + 1).ToString();
+                param[secondParam] = interactions[i].Gene2;
+                insertVal.Append(secondParam);
+
+                insertVal.Append(")");
+            }
+
+            var completeQuery = query.Replace("@insertVal", insertVal.ToString());
+            Dictionary<GenePair, List<(int, string)>> queryItems = new Dictionary<GenePair, List<(int, string)>>();
+            List<List<object>> rawData = new List<List<object>>();
+
+            await DBHandler.getDataListAsync(null, rawData, null, completeQuery, DBHandler.Servers.azureProtein).ConfigureAwait(false);
+
+            if (rawData.Count != 0)
+                foreach (var row in rawData)
+                {
+                    var pair = new GenePair((int)row[0], (int)row[1]);
+                    if (!queryItems.ContainsKey(pair))
+                        queryItems[pair] = new List<(int, string)>();
+                    queryItems[pair].Add(((int)row[2], row[3] as string));
+                }
+
+            List<ReferenceModel> data = new List<ReferenceModel>();
+            foreach (var kp in queryItems)
+            {
+                ReferenceModel model = new ReferenceModel()
+                {
+                    gene1 = kp.Key.Gene1,
+                    gene2 = kp.Key.Gene2,
+                    geneName1 = idgene[kp.Key.Gene1],
+                    geneName2 = idgene[kp.Key.Gene2]
+                };
+                List<PaperModel> papers = new List<PaperModel>();
+                foreach (var item in kp.Value)
+                {
+                    PaperModel pmdel = new PaperModel()
+                    {
+                        refID = item.Item1,
+                        author = item.Item2
+                    };
+                    papers.Add(pmdel);
+                }
+                model.references = papers;
+                data.Add(model);
+            }
+            return data.ToArray();
+        }
+
+        private bool isDatasetValid()
+        {
+            return GeneRelation != null && geneid != null && idgene != null && CacheUp != null && CacheDown != null && GeneRelation.Count > 200000;
+        }
 
         private SearchResultModel _searchSingle(SingleQueryModel model, CancellationToken ct)
         {
@@ -250,7 +349,8 @@ namespace Protein_Interaction.Operations
                         else
                             reference.Add(new GenePair(levels[y][x].geneID, levels[y][x].next.geneID));
                     }
-            return new SearchResultModel(data, null, reference);
+            var sortedRef = reference.Distinct().OrderBy(x => x.Gene1).ThenBy(x => x.Gene2).ToArray();
+            return new SearchResultModel(data, null, sortedRef);
         }
 
         private SearchResultModel _searchMulti(MultiQueryModel model, CancellationToken ct)
@@ -344,10 +444,11 @@ namespace Protein_Interaction.Operations
                 });
             }
 
-            var references = new List<GenePair>();
+            var reference = new List<GenePair>();
             for (int i = 0; i < ecount; i++)
-                references.Add(new GenePair(edge[i * 2], edge[i * 2 + 1]));
-            return new SearchResultModel(data, null, references);
+                reference.Add(new GenePair(edge[i * 2], edge[i * 2 + 1]));
+            var sortedRef = reference.Distinct().OrderBy(x => x.Gene1).ThenBy(x => x.Gene2).ToArray();
+            return new SearchResultModel(data, null, sortedRef);
         }
 
         private int DbQuery(ref bool isProcessed, int query, uint depth,
@@ -414,13 +515,14 @@ namespace Protein_Interaction.Operations
             await DBHandler.getDataListAsync(null, data, null, query, DBHandler.Servers.azureProtein).ConfigureAwait(false);
             Dictionary<int, string> newIDGene = new Dictionary<int, string>();
             Dictionary<string, int> newGeneID = new Dictionary<string, int>();
-            foreach (var row in data)
-            {
-                int id = (int)row[0];
-                string symbol = row[1] as string;
-                newIDGene[id] = symbol;
-                newGeneID[symbol] = id;
-            }
+            if (data.Count != 0)
+                foreach (var row in data)
+                {
+                    int id = (int)row[0];
+                    string symbol = row[1] as string;
+                    newIDGene[id] = symbol;
+                    newGeneID[symbol] = id;
+                }
             Interlocked.Exchange(ref idgene, newIDGene);
             Interlocked.Exchange(ref geneid, newGeneID);
         }
@@ -436,15 +538,16 @@ namespace Protein_Interaction.Operations
             List<List<object>> data = new List<List<object>>();
             await DBHandler.getDataListAsync(null, data, null, query, DBHandler.Servers.azureProtein).ConfigureAwait(false);
 
-            foreach (var item in data)
-            {
-                int id1 = (int)item[0];
-                int id2 = (int)item[1];
-                int conf = (int)item[3];
-                newGeneRelation[new GenePair(id1, id2)] = conf;
-                newCacheDown[id1].Add(id2);
-                newCacheUp[id2].Add(id1);
-            }
+            if (data.Count != 0)
+                foreach (var item in data)
+                {
+                    int id1 = (int)item[0];
+                    int id2 = (int)item[1];
+                    int conf = (int)item[3];
+                    newGeneRelation[new GenePair(id1, id2)] = conf;
+                    newCacheDown[id1].Add(id2);
+                    newCacheUp[id2].Add(id1);
+                }
             Interlocked.Exchange(ref GeneRelation, newGeneRelation);
             Interlocked.Exchange(ref CacheDown, newCacheDown);
             Interlocked.Exchange(ref CacheUp, newCacheUp);
@@ -469,15 +572,15 @@ namespace Protein_Interaction.Operations
             }
         }
 
-        private static byte[] getHash(string inputString)
+        private static byte[] getHash(string input)
         {
-            return md5.ComputeHash(Encoding.ASCII.GetBytes(inputString));
+            return md5.ComputeHash(Encoding.ASCII.GetBytes(input));
         }
 
-        private static string getHashString(string inputString)
+        private static string getHashString(string input)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (byte b in getHash(inputString))
+            foreach (byte b in md5.ComputeHash(Encoding.ASCII.GetBytes(input)))
                 sb.Append(b.ToString("X2"));
             return sb.ToString();
         }
@@ -485,7 +588,16 @@ namespace Protein_Interaction.Operations
         private static string getHashString(byte[] input)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (byte b in input)
+            foreach (byte b in md5.ComputeHash(input))
+                sb.Append(b.ToString("X2"));
+            return sb.ToString();
+        }
+
+        private static string getHashString(MemoryStream input)
+        {
+            StringBuilder sb = new StringBuilder();
+            input.Position = 0;
+            foreach (byte b in md5.ComputeHash(input))
                 sb.Append(b.ToString("X2"));
             return sb.ToString();
         }

@@ -44,6 +44,7 @@ namespace Protein_Interaction.Models
         }
     }
 
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public struct GenePair
     {
         public int Gene1;
@@ -84,9 +85,9 @@ namespace Protein_Interaction.Models
     {
         public GraphModel graph;
         public Failure failure;
-        public List<GenePair> references;
+        public GenePair[] references;
 
-        public SearchResultModel(GraphModel graph, Failure failure, List<GenePair> references)
+        public SearchResultModel(GraphModel graph, Failure failure, GenePair[] references)
         {
             this.graph = graph;
             this.failure = failure;
