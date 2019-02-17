@@ -42,8 +42,6 @@ namespace Protein_Interaction
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            app.UseStaticFiles();
-
             loggerFactory.AddFile("logs/log{Date}.log", LogLevel.Information);
             ILogger<Startup> logger = loggerFactory.CreateLogger<Startup>();
             logger.LogInformation("Server Started");
