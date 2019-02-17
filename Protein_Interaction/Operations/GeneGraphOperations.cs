@@ -605,7 +605,11 @@ namespace Protein_Interaction.Operations
                     int id2 = (int)item[1];
                     int conf = (int)item[2];
                     newGeneRelation[new GenePair(id1, id2)] = conf;
+                    if (!newCacheDown.ContainsKey(id1))
+                        newCacheDown[id1] = new List<int>();
                     newCacheDown[id1].Add(id2);
+                    if (!newCacheUp.ContainsKey(id2))
+                        newCacheUp[id2] = new List<int>();
                     newCacheUp[id2].Add(id1);
                 }
             Interlocked.Exchange(ref GeneRelation, newGeneRelation);
