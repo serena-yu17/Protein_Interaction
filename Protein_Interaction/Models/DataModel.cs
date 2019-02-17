@@ -27,7 +27,7 @@ namespace Protein_Interaction.Models
         public int instanceID { get; set; }
     }
 
-    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    [ProtoContract]
     public class MultiQueryModel
     {
         [ProtoMember(1)]

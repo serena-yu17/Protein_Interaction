@@ -181,7 +181,7 @@ namespace Protein_Interaction.Operations
 
         private async Task<ReferenceModel[]> _getRef(GenePair[] interactions)
         {
-#region query
+            #region query
             const string query = @"
             if OBJECT_ID('tempdb..#tempGenes') is not null
 	            drop table #tempGenes;
@@ -197,7 +197,7 @@ namespace Protein_Interaction.Operations
             select r.Gene1, r.Gene2, r.RefID, r.Author
             from Ref r
 	            join #tempGenes t on r.Gene1 = t.gene1 and r.Gene2 = t.gene2;";
-#endregion
+            #endregion
 
             //synthesize the query
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -427,6 +427,10 @@ namespace Protein_Interaction.Operations
                         model.instanceID,
                         out pvertex, out pcoordinates, out vcount, out pedge, out ecount,
                         genelist, n);
+
+                if (vcount == 0 || ecount == 0)
+                    return new SearchResultModel(null, new Failure(1), null);
+
                 vertex = new int[vcount];
                 coordinates = new float[vcount * 2];
                 edge = new int[ecount * 2];
@@ -441,8 +445,6 @@ namespace Protein_Interaction.Operations
                 freeIntArr(pedge);
             }
             //Done C++ call
-            if (vcount == 0 || ecount == 0)
-                return new SearchResultModel(null, new Failure(1), null);
 
             if (ct.IsCancellationRequested)
                 return null;
@@ -615,6 +617,17 @@ namespace Protein_Interaction.Operations
             Interlocked.Exchange(ref GeneRelation, newGeneRelation);
             Interlocked.Exchange(ref CacheDown, newCacheDown);
             Interlocked.Exchange(ref CacheUp, newCacheUp);
+
+            int dataCount = 0;
+            int[] dataset = new int[newGeneRelation.Count * 3];
+            foreach (var key in newGeneRelation)
+            {
+                dataset[dataCount * 3] = key.Key.Gene1;
+                dataset[dataCount * 3 + 1] = key.Key.Gene2;
+                dataset[dataCount * 3 + 2] = key.Value;
+                dataCount++;
+            }
+            buildGraph(dataset, dataCount);
         }
 
         private async Task writeLog<T>(T logModel, int instanceID)
