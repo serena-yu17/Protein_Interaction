@@ -64,6 +64,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\js\about.min.js" />
     <Content Remove="wwwroot\js\blob.js" />
     <Content Remove="wwwroot\js\blob.min.js" />
     <Content Remove="wwwroot\js\FileSaver.js" />
@@ -77,6 +78,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\js\about.min.js" />
     <_ContentIncludedByDefault Remove="wwwroot\js\Multi\index.min.js" />
   </ItemGroup>
 
@@ -96,6 +98,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\js\about.min.js" />
     <None Include="wwwroot\js\Multi\index.min.js" />
   </ItemGroup>
 

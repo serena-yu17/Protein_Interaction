@@ -68,5 +68,11 @@
     "inputFiles": [
       "wwwroot/js/Multi/index.js"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/js/about.min.js",
+    "inputFiles": [
+      "wwwroot/js/about.js"
+    ]
   }
 ]
