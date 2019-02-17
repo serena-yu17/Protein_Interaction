@@ -52,8 +52,10 @@ namespace Protein_Interaction.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ErrorHandler.getInfoStringTrace(ex));
-                return new StatusCodeResult(500);
+                var msg = ErrorHandler.getInfoStringTrace(ex);
+                logger.LogError(msg);
+                Response.StatusCode = 500;
+                return Content(msg);
             }
         }
 
@@ -73,8 +75,10 @@ namespace Protein_Interaction.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ErrorHandler.getInfoStringTrace(ex));
-                return new StatusCodeResult(500);
+                var msg = ErrorHandler.getInfoStringTrace(ex);
+                logger.LogError(msg);
+                Response.StatusCode = 500;
+                return Content(msg);
             }
         }
 
@@ -88,50 +92,11 @@ namespace Protein_Interaction.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ErrorHandler.getInfoStringTrace(ex));
-                return new StatusCodeResult(500);
+                var msg = ErrorHandler.getInfoStringTrace(ex);
+                logger.LogError(msg);
+                Response.StatusCode = 500;
+                return Content(msg);
             }
-        }
-
-        private int DbQuery(ref bool process, int query, uint depth, List<List<Node>> levels, uint initial, uint width, Dictionary<int, List<int>> db, bool reverse, CancellationToken ct)
-        {
-            int xmax = 0;
-            HashSet<int> used = new HashSet<int> { query };
-            for (int i = (int)initial; i < depth + initial && levels[i - 1].Count > 0; i++)
-            {
-                if (ct.IsCancellationRequested)
-                    return 0;
-                levels.Add(new List<Node>());
-                foreach (var node in levels[i - 1])
-                {
-                    var gene = node.geneID;
-                    if (db.ContainsKey(gene))
-                    {
-                        List<Tuple<int, int>> selection = new List<Tuple<int, int>>();
-                        int count = 0;
-                        foreach (var reGene in db[gene])
-                        {
-                            if (count == width)
-                                break;
-                            if (!used.Contains(reGene))
-                            {
-                                used.Add(reGene);
-                                var newNode = new Node(node, reGene, reverse);
-                                levels[i].Add(newNode);
-                                count++;
-                            }
-                        }
-                    }
-                }
-                if (levels[i].Count > xmax)
-                    xmax = levels[i].Count;
-                if (xmax > 1024 || levels.Count > 1024)
-                {
-                    process = false;
-                    return -1;
-                }
-            }
-            return xmax;
         }
 
         [HttpGet]
@@ -144,8 +109,10 @@ namespace Protein_Interaction.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ErrorHandler.getInfoStringTrace(ex));
-                return new StatusCodeResult(500);
+                var msg = ErrorHandler.getInfoStringTrace(ex);
+                logger.LogError(msg);
+                Response.StatusCode = 500;
+                return Content(msg);
             }
         }
     }
