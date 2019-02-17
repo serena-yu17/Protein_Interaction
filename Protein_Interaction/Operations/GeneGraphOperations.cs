@@ -78,9 +78,9 @@ namespace Protein_Interaction.Operations
 
         public void loadDB()
         {
-            if ((dbTsk == null || dbTsk.IsCompleted) && isDatasetValid())
+            if ((dbTsk == null || dbTsk.IsCompleted) && !isDatasetValid())
                 lock (dbLock)
-                    if ((dbTsk == null || dbTsk.IsCompleted) && isDatasetValid())
+                    if ((dbTsk == null || dbTsk.IsCompleted) && !isDatasetValid())
                         dbTsk = _loacDBAsync();
         }
 
@@ -603,7 +603,7 @@ namespace Protein_Interaction.Operations
                 {
                     int id1 = (int)item[0];
                     int id2 = (int)item[1];
-                    int conf = (int)item[3];
+                    int conf = (int)item[2];
                     newGeneRelation[new GenePair(id1, id2)] = conf;
                     newCacheDown[id1].Add(id2);
                     newCacheUp[id2].Add(id1);
