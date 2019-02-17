@@ -47,17 +47,23 @@ namespace Protein_Interaction.Controllers
         
         private static Task tskDB = null;
 
-        static int taskID = 0;
-        static ConcurrentDictionary<int, JsonResult> failQueries = new ConcurrentDictionary<int, JsonResult>();
+        static int taskCount = 0;
+
+
+        private static Dictionary<Tuple<int, int>, int> GeneRelation = null;
+        private static Dictionary<string, int> geneid = null;
+        private static Dictionary<int, string> idgene = null;
+        private static Dictionary<int, List<int>> CacheUp = null;
+        private static Dictionary<int, List<int>> CacheDown = null;
 
         public IActionResult Multi()
         {
-            ViewBag.taskID = Interlocked.Increment(ref taskID);
+            ViewBag.taskID = Interlocked.Increment(ref taskCount);
             return View();
         }
         public IActionResult Single()
         {
-            ViewBag.taskID = Interlocked.Increment(ref taskID);
+            ViewBag.taskID = Interlocked.Increment(ref taskCount);
             return View();
         }
 
@@ -169,7 +175,7 @@ namespace Protein_Interaction.Controllers
             bool process = true;
             query = query.Trim().ToUpper();
             if (!geneid.ContainsKey(query))
-                return FailedQuery(1);
+                return Json(new Failure(1));
             int queryID = geneid[query];
             bool found = false;
             var queryNode = new Node(null, queryID, false);
@@ -178,7 +184,7 @@ namespace Protein_Interaction.Controllers
             //BFS to search for all upstream genes
             int newx = DbQuery(ref process, queryID, updepth, levels, 1, width, CacheUp, false, ct);
             if (!process)
-                return FailedQuery(2);
+                return Json(new Failure(2));
             if (newx > 0)
             {
                 found = true;
@@ -194,7 +200,7 @@ namespace Protein_Interaction.Controllers
             //BFS to search for all downstream genes
             newx = DbQuery(ref process, queryID, ddepth, levels, (uint)upperCount, width, CacheDown, true, ct);
             if (!process)
-                return FailedQuery(2);
+                return Json(new Failure(2));
             if (newx > 0)
             {
                 found = true;
@@ -202,7 +208,7 @@ namespace Protein_Interaction.Controllers
                     xmax = newx;
             }
             if (!found)
-                return FailedQuery(1);
+                return Json(new Failure(1));
             if (ct.IsCancellationRequested)
                 ct.ThrowIfCancellationRequested();
             while (levels[levels.Count - 1].Count == 0)
@@ -387,7 +393,7 @@ namespace Protein_Interaction.Controllers
             }
             //Done C++ call
             if (vcount == 0 || ecount == 0)
-                return FailedQuery(1);
+                return Json(new Failure(1));
             double xmax = 0, ymax = 0;
             for (int i = 0; i < vcount; i++)
             {
@@ -482,7 +488,7 @@ namespace Protein_Interaction.Controllers
                 i++;
             }
             if (queryId.Count == 0)
-                return FailedQuery(1);
+                return Json(new Failure(1));
 
             string queryLog = string.Join(", ", queryLst);
             Task logTask = writeLog(queryLog, instanceID);
@@ -568,26 +574,6 @@ namespace Protein_Interaction.Controllers
             return xmax;
         }
 
-        //status 1: query target not found. 2: query too large to display
-        private JsonResult FailedQuery(int status)
-        {
-            if (failQueries.ContainsKey(status))
-                return failQueries[status];
-            StringBuilder jsonStr = new StringBuilder();
-            StringWriter sw = new StringWriter(jsonStr);
-            using (JsonWriter writer = new JsonTextWriter(sw))
-            {
-                writer.Formatting = Formatting.Indented;
-                writer.WriteStartObject();
-                writer.WritePropertyName("status");
-                writer.WriteValue(status);
-                writer.WriteEndObject();
-            }
-            JsonResult res = new JsonResult(jsonStr.ToString());
-            failQueries[status] = res;
-            return res;
-        }
-
         [HttpPost]
         public async Task<JsonResult> GetReference(string refKey)
         {
@@ -661,6 +647,6 @@ namespace Protein_Interaction.Controllers
                     );
             }
             catch { }   //suppress exceptions to avoid crash due to unhandled exception
-        }
+        }        
     }
 }

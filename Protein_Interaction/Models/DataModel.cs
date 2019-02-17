@@ -1,9 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using ProtoBuf;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Protein_Interaction.Models
 {
+    [ProtoContract]
+    public class SingleQueryModel
+    {
+        [ProtoMember(1)]
+        public string query { get; set; }
+        [ProtoMember(2)]
+        public uint updepth { get; set; }
+        [ProtoMember(3)]
+        public uint ddepth { get; set; }
+        [ProtoMember(4)]
+        public uint width { get; set; }
+
+        public int instanceID { get; set; }
+    }
+
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class MultiQueryModel
+    {
+        [ProtoMember(1)]
+        public int[] queries { get; set; }
+
+        public int instanceID { get; set; }
+    }
+
     public class RefQuery
     {
         public int gene1 { get; set; }
@@ -17,6 +41,66 @@ namespace Protein_Interaction.Models
             this.gene2 = gene2;
             this.refID = refID;
             this.author = author;
+        }
+    }
+
+    public struct GenePair
+    {
+        public int Gene1;
+        public int Gene2;
+
+        public GenePair(int gene1, int gene2)
+        {
+            Gene1 = gene1;
+            Gene2 = gene2;
+        }
+
+        public override bool Equals(object other)
+        {
+            if (ReferenceEquals(this, other))
+                return true;
+            if (!(other is GenePair pair))
+                return false;
+            return Gene1 == pair.Gene1 && Gene2 == pair.Gene2;
+        }
+
+        public static bool operator ==(GenePair pair1, GenePair pair2)
+        {
+            return pair1.Equals(pair2);
+        }
+
+        public static bool operator !=(GenePair pair1, GenePair pair2)
+        {
+            return pair1.Equals(pair2);
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)(((long)Gene1 + Gene2) * ((long)Gene1 + Gene2 + 1) / 2 + Gene2);
+        }
+    }
+
+    public class SearchResultModel
+    {
+        public GraphModel graph;
+        public Failure failure;
+        public List<GenePair> references;
+
+        public SearchResultModel(GraphModel graph, Failure failure, List<GenePair> references)
+        {
+            this.graph = graph;
+            this.failure = failure;
+            this.references = references;
+        }
+    }
+
+    public class Failure
+    {
+        int status;
+
+        public Failure(int status)
+        {
+            this.status = status;
         }
     }
 
@@ -40,7 +124,7 @@ namespace Protein_Interaction.Models
         public float ymax { get; set; }
         public List<string[]> vertex { get; set; }
         public List<int> query { get; set; }
-        public List<int[]> edge { get; set; }  
+        public List<int[]> edge { get; set; }
         public string refKey { get; set; }
 
         public GraphModel()
@@ -103,6 +187,7 @@ namespace Protein_Interaction.Models
         public Node next { get; set; }
         public int geneID { get; set; }
         public bool reverse { get; set; } = false;
+
         public Node(Node next, int symbol, bool reverse)
         {
             this.next = next;
