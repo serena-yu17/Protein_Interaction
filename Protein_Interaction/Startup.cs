@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Protein_Interaction.Operations;
 
 namespace Protein_Interaction
 {
@@ -58,6 +59,8 @@ namespace Protein_Interaction
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
+
+            new GeneGraphOperations(null, loggerFactory).loadDB();
         }
     }
 }

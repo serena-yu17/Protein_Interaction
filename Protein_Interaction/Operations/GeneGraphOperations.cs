@@ -3,7 +3,6 @@ using Livingstone.Library;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Protein_Interaction.Data;
 using Protein_Interaction.Models;
 using ProtoBuf;
 using System;
@@ -19,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace Protein_Interaction.Operations
 {
-    public class GeneGraph
+    public class GeneGraphOperations
     {
         //DLLEXP void buildGraph(int32_t const data[], int32_t nData)
         [DllImport("gene.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -50,7 +49,7 @@ namespace Protein_Interaction.Operations
         private static Dictionary<int, List<int>> CacheDown = null;
 
         private IMemoryCache _cache;
-        private ILogger<GeneGraph> logger;
+        private ILogger<GeneGraphOperations> logger;
 
         private static int taskCount = 0;
 
@@ -60,10 +59,15 @@ namespace Protein_Interaction.Operations
 
         private static ConcurrentDictionary<int, CancellationTokenSource> cancellation = new ConcurrentDictionary<int, CancellationTokenSource>();
 
-        public GeneGraph(IMemoryCache cache, ILoggerFactory factory)
+        public GeneGraphOperations(IMemoryCache cache, ILoggerFactory factory)
         {
             _cache = cache;
-            logger = factory.CreateLogger<GeneGraph>();
+            logger = factory.CreateLogger<GeneGraphOperations>();
+        }
+
+        public int getTaskID()
+        {
+            return Interlocked.Increment(ref taskCount);
         }
 
         public void loadDB()
@@ -82,6 +86,9 @@ namespace Protein_Interaction.Operations
 
         public SearchResultModel searchSingle(SingleQueryModel model)
         {
+            var logTsk = writeLog(model, model.instanceID);
+            if (!isDatasetValid() && dbTsk != null && !dbTsk.IsCompleted)
+                dbTsk.Wait();
             model.query = model.query.ToUpper().Trim();
             string refKey = null;
             using (MemoryStream ms = new MemoryStream())
@@ -108,8 +115,49 @@ namespace Protein_Interaction.Operations
             return data;
         }
 
-        public async Task<ReferenceModel[]> obtainRef(GenePair[] interactions)
+        public SearchResultModel searchMulti(MultiQueryModel model)
         {
+            var logTsk = writeLog(model, model.instanceID);
+            if (!isDatasetValid() && dbTsk != null && !dbTsk.IsCompleted)
+                dbTsk.Wait();
+
+            Array.Sort(model.queries);
+
+            string refKey = null;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, model);
+                refKey = getHashString(ms);
+            }
+            if (_cache.TryGetValue(refKey, out SearchResultModel val) && val != null && val.graph != null)
+            {
+                return val;
+            }
+
+            CancellationTokenSource cs = new CancellationTokenSource();
+            cancellation[model.instanceID] = cs;
+            var ct = cs.Token;
+
+            var data = _searchMulti(model, ct);
+            if (!ct.IsCancellationRequested && data != null && data.graph != null)
+            {
+                data.graph.refKey = refKey;
+                _cache.Set(refKey, data);
+            }
+            clearCancellationTokenSource(model.instanceID);
+            return data;
+        }
+
+        public async Task<ReferenceModel[]> getRef(string searchRef)
+        {
+            GenePair[] interactions = null;
+
+            if (!_cache.TryGetValue(searchRef, out SearchResultModel resultData) || 
+                resultData == null || resultData.referencePairs == null)
+                return null;
+
+            interactions = resultData.referencePairs;
+
             string refKey = null;
             using (MemoryStream ms = new MemoryStream())
             {
@@ -119,13 +167,13 @@ namespace Protein_Interaction.Operations
             if (_cache.TryGetValue(refKey, out ReferenceModel[] data) && data != null && data.Length != 0)
                 return data;
 
-            var references = await _obtainRef(interactions).ConfigureAwait(false);
-            if(references != null && references.Length != 0)
+            var references = await _getRef(interactions).ConfigureAwait(false);
+            if (references != null && references.Length != 0)
                 _cache.Set(refKey, references);
             return references;
         }
 
-        private async Task<ReferenceModel[]> _obtainRef(GenePair[] interactions)
+        private async Task<ReferenceModel[]> _getRef(GenePair[] interactions)
         {
             #region query
             const string query = @"
@@ -553,15 +601,20 @@ namespace Protein_Interaction.Operations
             Interlocked.Exchange(ref CacheUp, newCacheUp);
         }
 
-        private async Task writeLog(string log, int instanceID)
+        private async Task writeLog<T>(T logModel, int instanceID)
         {
+            if (logModel == null)
+                return;
             try
             {
                 const string query = @"
                 INSERT INTO QueryLogs (query, instanceID) values (@query, @instanceID);";
+
+                var logText = JsonConvert.SerializeObject(logModel);
+
                 Dictionary<string, object> param = new Dictionary<string, object>()
                 {
-                    { "@query", log },
+                    { "@query", logText },
                     { "@instanceID", instanceID }
                 };
                 await DBHandler.ExecuteNonQueryAsync(query, DBHandler.Servers.azureProtein, param).ConfigureAwait(false);

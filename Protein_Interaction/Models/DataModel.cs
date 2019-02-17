@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -26,6 +27,23 @@ namespace Protein_Interaction.Models
         public int[] queries { get; set; }
 
         public int instanceID { get; set; }
+
+        private static readonly char[] delim = new char[]
+        {
+            ',', ' ', ';'
+        };
+
+        public MultiQueryModel(string query, int instanceID)
+        {
+            this.instanceID = instanceID;
+
+            var sections = query.Split(delim, StringSplitOptions.RemoveEmptyEntries);
+            List<int> queryGeneID = new List<int>();
+            foreach (var sec in sections)
+                if (int.TryParse(sec, out var intVal))
+                    queryGeneID.Add(intVal);
+            queries = queryGeneID.ToArray();
+        }
     }
 
     public class RefQuery
@@ -85,13 +103,13 @@ namespace Protein_Interaction.Models
     {
         public GraphModel graph;
         public Failure failure;
-        public GenePair[] references;
+        public GenePair[] referencePairs;
 
         public SearchResultModel(GraphModel graph, Failure failure, GenePair[] references)
         {
             this.graph = graph;
             this.failure = failure;
-            this.references = references;
+            this.referencePairs = references;
         }
     }
 

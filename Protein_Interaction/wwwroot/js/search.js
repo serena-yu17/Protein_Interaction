@@ -247,7 +247,7 @@
             refKey: refKey
         };
         $.ajax({
-            type: "POST",
+            type: "GET",
             url: refURl,
             data: requestParam,
             success: function (response) {
@@ -291,7 +291,7 @@
     if (requestParam !== null) {
         initquery();
         $.ajax({
-            type: "POST",
+            type: "GET",
             url: searchUrl,
             data: requestParam,
             success: function (response) {
