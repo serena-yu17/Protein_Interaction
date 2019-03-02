@@ -64,6 +64,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="logs\**" />
+    <Content Remove="logs\**" />
+    <EmbeddedResource Remove="logs\**" />
+    <None Remove="logs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="wwwroot\js\about.min.js" />
     <Content Remove="wwwroot\js\blob.js" />
     <Content Remove="wwwroot\js\blob.min.js" />
