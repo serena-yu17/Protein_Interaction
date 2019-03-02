@@ -1,12 +1,10 @@
-﻿using Livingstone.Library;
+﻿using ErrorMessage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Protein_Interaction.Models;
 using Protein_Interaction.Operations;
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Protein_Interaction.Controllers
@@ -61,7 +59,7 @@ namespace Protein_Interaction.Controllers
 
         [HttpGet]
         public IActionResult SearchMulti(string query, int instanceID)
-        {            
+        {
             try
             {
                 var model = graphOperations.collectQueryGenes(query, instanceID);

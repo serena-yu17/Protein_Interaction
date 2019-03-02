@@ -1,11 +1,15 @@
 ﻿function getRequestParam() {
     var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("geneid") && urlParams.has("uplen") && urlParams.has("downlen") && urlParams.has("perlvl")) {
+    var geneid = urlParams.get('geneid');
+    var uplen = urlParams.get('uplen');
+    var downlen = urlParams.has("downlen");
+    var perlvl = urlParams.get('perlvl');
+    if (geneid !== null && uplen !== null && downlen !== null && perlvl !== null) {
         var requestParam = {
-            query: urlParams.get('geneid'),
-            updepth: urlParams.get('uplen'),
-            ddepth: urlParams.get('downlen'),
-            width: urlParams.get('perlvl'),
+            query: geneid,
+            updepth: uplen,
+            ddepth: downlen,
+            width: perlvl,
             instanceID: instanceID
         };
         if (requestParam.query && requestParam.query !== '' && requestParam.query.length > 0 && requestParam.updepth >= 0 && requestParam.ddepth >= 0 && requestParam.width > 0)
@@ -13,5 +17,5 @@
         else
             return null;
     }
-    return null;
+    return undefined;
 }

@@ -1,5 +1,5 @@
 ﻿using DBLib;
-using Livingstone.Library;
+using ErrorMessage;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -240,7 +240,7 @@ namespace Protein_Interaction.Operations
             Dictionary<GenePair, List<(int, string)>> queryItems = new Dictionary<GenePair, List<(int, string)>>();
             List<List<object>> rawData = new List<List<object>>();
 
-            await DBHandler.getDataListAsync(null, rawData, null, completeQuery, dbServer).ConfigureAwait(false);
+            await DBHandler.getDataListAsync(null, rawData, null, completeQuery, dbServer, param).ConfigureAwait(false);
 
             if (rawData.Count != 0)
                 foreach (var row in rawData)
@@ -647,6 +647,9 @@ namespace Protein_Interaction.Operations
 
         private async Task writeLog<T>(T logModel, int instanceID)
         {
+#if DEBUG
+            return;
+#else
             if (logModel == null)
                 return;
             try
@@ -667,6 +670,7 @@ namespace Protein_Interaction.Operations
             {
                 logger.LogError(ErrorHandler.getInfoStringTrace(ex));
             }
+#endif
         }
 
         private static byte[] getHash(string input)

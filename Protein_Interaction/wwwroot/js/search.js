@@ -91,6 +91,13 @@
         document.getElementById('outtext').innerHTML = '';
     }
 
+    function clearPrompt(information) {
+        document.getElementById("div-scale").classList.add('hidden');
+        document.getElementById('prompt').innerHTML = '';
+        document.getElementById('output').innerHTML = '';
+        document.getElementById('outtext').innerHTML = '';
+    }
+
     function svgElem(type) {
         return document.createElementNS("http://www.w3.org/2000/svg", type);
     }
@@ -288,7 +295,13 @@
     });
 
     var requestParam = getRequestParam();
-    if (requestParam !== null) {
+    if (requestParam === null) {
+        errorPrompt("Invalid input.");
+    }
+    else if (requestParam === undefined) {
+        clearPrompt();
+    }
+    else if (requestParam !== null) {
         initquery();
         $.ajax({
             type: "GET",
@@ -309,8 +322,5 @@
                 document.getElementById("btnsubmit").disabled = false;
             }
         });
-    }
-    else {
-        errorPrompt("Invalid input.");
     }
 })();

@@ -1,8 +1,9 @@
 ﻿function getRequestParam() {
     var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("genelist")) {
+    var geneList = urlParams.get('genelist');
+    if (geneList) {
         var requestParam = {
-            query: urlParams.get('genelist'),
+            query: geneList,
             instanceID: instanceID
         };
         if (requestParam.query && requestParam.query !== '')
@@ -10,5 +11,5 @@
         else
             return null;
     }
-    return null;
+    return undefined;
 }
