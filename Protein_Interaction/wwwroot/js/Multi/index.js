@@ -6,8 +6,10 @@
             query: geneList,
             instanceID: instanceID
         };
-        if (requestParam.query && requestParam.query !== '')
+        if (requestParam.query && requestParam.query !== '') {
+            document.getElementById("genelist").value = geneList;
             return requestParam;
+        }
         else
             return null;
     }
